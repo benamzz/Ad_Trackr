@@ -1,0 +1,14 @@
+pytrends==4.9.2
+pymongo==4.6.1
+pyspark==3.3.0
+pandas==2.1.4
+numpy==1.24.3
+requests==2.31.0
+python-dateutil==2.8.2
+hdfs3==0.3.1
+pyhive==0.7.0
+matplotlib==3.7.1
+seaborn==0.12.2
+plotly==5.17.0
+jupyter==1.0.0
+jupyterlab==4.0.9 
