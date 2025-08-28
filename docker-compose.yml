@@ -1,0 +1,160 @@
+services:
+  # 🗄️ HDFS NameNode
+  namenode:
+    image: wxwmatt/hadoop-namenode:2.1.1-hadoop3.3.1-java8
+    container_name: namenode
+    restart: always
+    ports:
+      - "9870:9870"
+      - "9000:9000"
+    environment:
+      - CLUSTER_NAME=hadoop-cluster
+      - HOME=/app
+      - SPARK_HOME=/usr/local/lib/python3.7/dist-packages/pyspark
+      - HIVE_HOME=/hive/apache-hive-3.1.3-bin
+    volumes:
+      - namenode:/hadoop/dfs/name
+    networks:
+      - datalake
+
+  # 📦 HDFS DataNode
+  datanode:
+    image: wxwmatt/hadoop-datanode:2.1.1-hadoop3.3.1-java8
+    container_name: datanode
+    restart: always
+    environment:
+      - SERVICE_PRECONDITION=namenode:9870
+    ports:
+      - "9864:9864"
+    volumes:
+      - datanode:/hadoop/dfs/data
+    networks:
+      - datalake
+
+  # 🎯 YARN ResourceManager
+  resourcemanager:
+    image: wxwmatt/hadoop-resourcemanager:2.1.1-hadoop3.3.1-java8
+    container_name: resourcemanager
+    restart: always
+    ports:
+      - "8088:8088"
+    environment:
+      - SERVICE_PRECONDITION=namenode:9000 namenode:9870 datanode:9864
+    networks:
+      - datalake
+
+  # 🔧 YARN NodeManager
+  nodemanager:
+    image: wxwmatt/hadoop-nodemanager:2.1.1-hadoop3.3.1-java8
+    container_name: nodemanager
+    restart: always
+    ports:
+      - "8042:8042"
+    environment:
+      - SERVICE_PRECONDITION=namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088
+    networks:
+      - datalake
+
+  # 📊 YARN HistoryServer
+  historyserver:
+    image: wxwmatt/hadoop-historyserver:2.1.1-hadoop3.3.1-java8
+    container_name: historyserver
+    restart: always
+    ports:
+      - "8188:8188"
+    environment:
+      - SERVICE_PRECONDITION=namenode:9000 namenode:9870 datanode:9864 resourcemanager:8088
+    volumes:
+      - historyserver:/hadoop/yarn/timeline
+    networks:
+      - datalake
+
+  # 🔥 Apache Spark Master
+  spark-master:
+    image: bitnami/spark:3.3.0
+    container_name: spark-master
+    restart: always
+    environment:
+      - SPARK_MODE=master
+    ports:
+      - "8080:8080"
+    networks:
+      - datalake
+
+  # 🔥 Apache Spark Worker
+  spark-worker:
+    image: bitnami/spark:3.3.0
+    container_name: spark-worker
+    restart: always
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+    depends_on:
+      - spark-master
+    networks:
+      - datalake
+
+  # 🛠️ Apache Airflow
+  airflow:
+    image: apache/airflow:2.6.0
+    container_name: airflow
+    restart: always
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__CORE__FERNET_KEY=YOUR_FERNET_KEY
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+    command: webserver
+    networks:
+      - datalake
+
+  # 📓 Jupyter Notebook
+  jupyter:
+    image: jupyter/pyspark-notebook
+    container_name: jupyter
+    restart: always
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+    networks:
+      - datalake
+
+  # 🍃 MongoDB (Stockage des données brutes)
+  mongo:
+    image: mongo:6.0
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - datalake
+
+  # 📊 Mongo Express (Interface Web)
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8082:8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+    depends_on:
+      - mongo
+    networks:
+      - datalake
+
+volumes:
+  namenode:
+  datanode:
+  historyserver:
+  mongo_data:
+
+networks:
+  datalake:
+    driver: bridge

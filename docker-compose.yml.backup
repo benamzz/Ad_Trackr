@@ -1,0 +1,104 @@
+version: "3.8"
+services:
+ # 🗄️ HDFS NameNode
+ namenode:
+   image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+   container_name: namenode
+   ports:
+     - "9870:9870"
+     - "9000:9000"
+   environment:
+     - CLUSTER_NAME=hadoop-cluster
+   volumes:
+     - namenode:/hadoop/dfs/name
+   networks:
+     - datalake
+ # 📦 HDFS DataNode
+ datanode:
+   image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+   container_name: datanode
+   environment:
+     - SERVICE_PRECONDITION=namenode:9870
+   ports:
+     - "9864:9864"
+   volumes:
+     - datanode:/hadoop/dfs/data
+   networks:
+     - datalake
+ # 🔥 Apache Spark Master
+ spark-master:
+   image: bitnami/spark:3.3.0
+   container_name: spark-master
+   environment:
+     - SPARK_MODE=master
+   ports:
+     - "8080:8080"
+   networks:
+     - datalake
+ # 🔥 Apache Spark Worker
+ spark-worker:
+   image: bitnami/spark:3.3.0
+   container_name: spark-worker
+   environment:
+     - SPARK_MODE=worker
+     - SPARK_MASTER_URL=spark://spark-master:7077
+   depends_on:
+     - spark-master
+   networks:
+     - datalake
+ # 🛠️ Apache Airflow
+ airflow:
+   image: apache/airflow:2.6.0
+   container_name: airflow
+   environment:
+     - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+     - AIRFLOW__CORE__FERNET_KEY=YOUR_FERNET_KEY
+     - AIRFLOW__CORE__LOAD_EXAMPLES=False
+   ports:
+     - "8081:8080"
+   volumes:
+     - ./dags:/opt/airflow/dags
+   command: webserver
+   networks:
+     - datalake
+ # 📓 Jupyter Notebook
+ jupyter:
+   image: jupyter/pyspark-notebook
+   container_name: jupyter
+   ports:
+     - "8888:8888"
+   volumes:
+     - ./notebooks:/home/jovyan/work
+   networks:
+     - datalake
+ # 🍃 MongoDB (Stockage des données brutes)
+ mongo:
+   image: mongo:6.0
+   container_name: mongo
+   restart: always
+   ports:
+     - "27017:27017"
+   volumes:
+     - mongo_data:/data/db
+   networks:
+     - datalake
+ # 📊 Mongo Express (Interface Web)
+ mongo-express:
+   image: mongo-express:latest
+   container_name: mongo-express
+   restart: always
+   ports:
+     - "8082:8081"
+   environment:
+     - ME_CONFIG_MONGODB_SERVER=mongo
+   depends_on:
+     - mongo
+   networks:
+     - datalake
+volumes:
+ namenode:
+ datanode:
+ mongo_data:
+networks:
+ datalake:
+   driver: bridge
