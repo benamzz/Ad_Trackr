@@ -1,0 +1,111 @@
+# 🔐 Fichiers de configuration sensibles
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# 🔑 Clés API et secrets
+config.py
+secrets.json
+credentials.json
+api_keys.txt
+
+# 📊 Données temporaires et logs
+logs/
+*.log
+*.out
+*.err
+
+# 🐳 Docker volumes et données persistantes
+mongo_data/
+spark_data/
+hdfs_data/
+jupyter_data/
+airflow_data/
+
+# 📓 Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+.jupyter/
+
+# 🐍 Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# 🎯 Environnements virtuels
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# 📝 IDEs et éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# 🔧 Configuration locale
+local_settings.py
+settings_local.py
+
+# 📦 Packages
+node_modules/
+*.tgz
+*.tar.gz
+
+# 🚫 Fichiers temporaires système
+.tmp/
+tmp/
+temp/
+.cache/
+
+# 📋 Données de test volumineuses
+*.csv
+*.json
+*.parquet
+*.avro
+data/raw/
+data/processed/
+!data/sample/
+
+# 🌊 Airflow
+airflow.db
+airflow.cfg
+airflow-webserver.pid
+standalone_admin_password.txt
+
+# ⚡ Spark
+metastore_db/
+derby.log
+spark-warehouse/
+
+# 📚 Documentation générée
+docs/_build/
+site/
