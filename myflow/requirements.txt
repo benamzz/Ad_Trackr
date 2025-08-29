@@ -1,0 +1,21 @@
+# MyFlow - Dépendances principales
+requests>=2.25.0
+pymongo>=4.0.0
+
+# Développement et tests
+pytest>=6.0.0
+pytest-cov>=2.10.0
+pytest-mock>=3.6.0
+
+# Documentation
+sphinx>=4.0.0
+sphinx-rtd-theme>=1.0.0
+
+# Linting et formatage
+black>=21.0.0
+flake8>=3.9.0
+mypy>=0.910
+
+# Utilitaires
+python-dotenv>=0.19.0
+click>=8.0.0
