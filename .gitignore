@@ -4,7 +4,6 @@
 .env.production
 .env.staging
 *.env
-
 # 🔑 Clés API et secrets
 config.py
 secrets.json
@@ -19,11 +18,13 @@ logs/
 
 # 🐳 Docker volumes et données persistantes
 mongo_data/
-spark_data/
+spark_data/ 
 hdfs_data/
 jupyter_data/
 airflow_data/
-
+old/
+spark-apps/
+notebooks/
 # 📓 Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 */.ipynb_checkpoints/*

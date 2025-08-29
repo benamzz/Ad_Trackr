@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-🎬 YouTube Data Extractor vers MongoDB
+YouTube Data Extractor vers MongoDB
 Pipeline d'extraction de données YouTube avec stockage dans MongoDB
 pour traitement ultérieur avec Spark
 """
@@ -41,9 +41,9 @@ class YouTubeToMongoExtractor:
             self.db = self.mongo_client.datalake
             self.raw_data_collection = self.db.raw_data
             self.api_logs_collection = self.db.api_logs
-            logger.info("✅ Connexion MongoDB établie")
+            logger.info("Connexion MongoDB établie")
         except Exception as e:
-            logger.error(f"❌ Erreur connexion MongoDB: {e}")
+            logger.error(f"Erreur connexion MongoDB: {e}")
             raise
             
     def log_api_call(self, endpoint: str, status: str, records_count: int = 0, error: Optional[str] = None):
@@ -84,12 +84,12 @@ class YouTubeToMongoExtractor:
             
             if documents:
                 result = self.raw_data_collection.insert_many(documents)
-                logger.info(f"✅ {len(result.inserted_ids)} documents {data_type} sauvegardés dans MongoDB")
+                logger.info(f"{len(result.inserted_ids)} documents {data_type} sauvegardés dans MongoDB")
                 return len(result.inserted_ids)
             return 0
             
         except Exception as e:
-            logger.error(f"❌ Erreur sauvegarde MongoDB: {e}")
+            logger.error(f"Erreur sauvegarde MongoDB: {e}")
             raise
             
     def get_top_videos(self, max_results: int = 50, region_code: str = "US") -> List[Dict]:
@@ -104,7 +104,7 @@ class YouTubeToMongoExtractor:
         }
         
         try:
-            logger.info(f"🌍 Récupération TOP {max_results} vidéos ({region_code})...")
+            logger.info(f"Récupération TOP {max_results} vidéos ({region_code})...")
             response = requests.get(url, params=params)
             response.raise_for_status()
             
@@ -121,11 +121,11 @@ class YouTubeToMongoExtractor:
             count = self.save_raw_data(videos, "videos", metadata)
             self.log_api_call("videos/mostPopular", "success", count)
             
-            logger.info(f"✅ {len(videos)} vidéos sauvegardées dans MongoDB")
+            logger.info(f"{len(videos)} vidéos sauvegardées dans MongoDB")
             return videos
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Erreur API YouTube: {e}")
+            logger.error(f"Erreur API YouTube: {e}")
             self.log_api_call("videos/mostPopular", "error", 0, str(e))
             return []
             
@@ -142,7 +142,7 @@ class YouTubeToMongoExtractor:
         }
         
         try:
-            logger.info(f"📺 Récupération détails de {len(channel_ids)} chaînes...")
+            logger.info(f"Récupération détails de {len(channel_ids)} chaînes...")
             response = requests.get(url, params=params)
             response.raise_for_status()
             
@@ -158,11 +158,11 @@ class YouTubeToMongoExtractor:
             count = self.save_raw_data(channels, "channels", metadata)
             self.log_api_call("channels", "success", count)
             
-            logger.info(f"✅ {len(channels)} chaînes sauvegardées dans MongoDB")
+            logger.info(f"{len(channels)} chaînes sauvegardées dans MongoDB")
             return channels
             
         except requests.exceptions.RequestException as e:
-            logger.error(f"❌ Erreur API YouTube channels: {e}")
+            logger.error(f"Erreur API YouTube channels: {e}")
             self.log_api_call("channels", "error", 0, str(e))
             return []
             
@@ -182,7 +182,7 @@ class YouTubeToMongoExtractor:
             }
             
             try:
-                logger.info(f"🔍 Recherche vidéos pour: '{keyword}'...")
+                logger.info(f"Recherche vidéos pour: '{keyword}'...")
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 
@@ -205,13 +205,13 @@ class YouTubeToMongoExtractor:
                 count = self.save_raw_data(videos, "search_videos", metadata)
                 self.log_api_call("search", "success", count)
                 
-                logger.info(f"✅ {len(videos)} vidéos trouvées pour '{keyword}'")
+                logger.info(f"{len(videos)} vidéos trouvées pour '{keyword}'")
                 
                 # Respect des limites de l'API
                 time.sleep(0.1)
                 
             except requests.exceptions.RequestException as e:
-                logger.error(f"❌ Erreur recherche '{keyword}': {e}")
+                logger.error(f"Erreur recherche '{keyword}': {e}")
                 self.log_api_call("search", "error", 0, str(e))
                 continue
                 
@@ -229,7 +229,7 @@ class YouTubeToMongoExtractor:
             search_keywords: Liste des mots-clés à rechercher
             region_codes: Codes des régions à analyser
         """
-        logger.info("🚀 Début de l'extraction YouTube vers MongoDB")
+        logger.info("Début de l'extraction YouTube vers MongoDB")
         
         total_videos = 0
         total_channels = 0
@@ -267,7 +267,7 @@ class YouTubeToMongoExtractor:
                 total_channels += len(channels)
                 time.sleep(0.1)  # Respect des limites API
                 
-        logger.info(f"🎉 Extraction terminée: {total_videos} vidéos, {total_channels} chaînes")
+        logger.info(f"Extraction terminée: {total_videos} vidéos, {total_channels} chaînes")
         return {
             "total_videos": total_videos,
             "total_channels": total_channels,
@@ -281,8 +281,7 @@ def main():
     MONGO_URI = os.getenv('MONGO_URI', 'mongodb://admin:password123@mongo:27017/')
     
     if not API_KEY or API_KEY == "AIzaSyDummy_Key_Replace_With_Real_One":
-        logger.warning("⚠️ YOUTUBE_API_KEY non définie ou clé de test - Utilisation de données de démonstration")
-        insert_demo_data(MONGO_URI)
+        logger.warning("YOUTUBE_API_KEY non définie ou clé de test")
         return
     
     # Mots-clés de recherche pour l'analyse des influenceurs
@@ -310,172 +309,13 @@ def main():
             region_codes=["US", "FR", "GB", "DE", "JP"]
         )
         
-        logger.info(f"✅ Extraction réussie: {results}")
+        logger.info(f"Extraction réussie: {results}")
         
     except Exception as e:
-        logger.error(f"❌ Erreur lors de l'extraction: {e}")
+        logger.error(f"Erreur lors de l'extraction: {e}")
         raise
 
-
-def insert_demo_data(mongo_uri: str):
-    """Insérer des données de démonstration YouTube dans MongoDB"""
-    try:
-        client = MongoClient(mongo_uri)
-        db = client['datalake']
-        
-        # Nettoyer les anciennes données
-        db.youtube_channels.delete_many({})
-        db.raw_data.delete_many({"data_type": "channels"})
-        
-        # Données de démonstration d'influenceurs YouTube
-        demo_channels = [
-            {
-                "channel_id": "UC-lHJZR3Gqxm24_Vd_AJ5Yw",
-                "title": "PewDiePie",
-                "description": "Gaming and entertainment content creator",
-                "custom_url": "@PewDiePie",
-                "published_at": "2010-04-29T10:54:00Z",
-                "country": "SE",
-                "default_language": "en",
-                "subscriber_count": 111000000,
-                "view_count": 29000000000,
-                "video_count": 4500,
-                "keywords": "gaming,entertainment,comedy,reaction,minecraft",
-                "topic_categories": "Gaming|Entertainment",
-                "topic_ids": "gaming,entertainment",
-                "privacy_status": "public",
-                "is_linked": True,
-                "made_for_kids": False,
-                "subscriber_tier": "100M+",
-                "extraction_timestamp": datetime.now().isoformat(),
-                "source": "demo_data"
-            },
-            {
-                "channel_id": "UCX6OQ3DkcsbYNE6H8uQQuVA",
-                "title": "MrBeast",
-                "description": "Amazing videos, challenges and philanthropy",
-                "custom_url": "@MrBeast",
-                "published_at": "2012-02-20T00:00:00Z",
-                "country": "US",
-                "default_language": "en",
-                "subscriber_count": 200000000,
-                "view_count": 35000000000,
-                "video_count": 800,
-                "keywords": "challenge,money,entertainment,viral,philanthropy",
-                "topic_categories": "Entertainment|Lifestyle",
-                "topic_ids": "entertainment,lifestyle",
-                "privacy_status": "public",
-                "is_linked": True,
-                "made_for_kids": False,
-                "subscriber_tier": "100M+",
-                "extraction_timestamp": datetime.now().isoformat(),
-                "source": "demo_data"
-            },
-            {
-                "channel_id": "UCBJycsmduvYEL83R_U4JriQ",
-                "title": "Marques Brownlee",
-                "description": "Technology reviews and news",
-                "custom_url": "@mkbhd",
-                "published_at": "2008-03-21T00:00:00Z",
-                "country": "US",
-                "default_language": "en",
-                "subscriber_count": 18000000,
-                "view_count": 4000000000,
-                "video_count": 1500,
-                "keywords": "tech,review,smartphone,car,tesla,apple",
-                "topic_categories": "Technology|Science",
-                "topic_ids": "technology,science",
-                "privacy_status": "public",
-                "is_linked": True,
-                "made_for_kids": False,
-                "subscriber_tier": "10M+",
-                "extraction_timestamp": datetime.now().isoformat(),
-                "source": "demo_data"
-            },
-            {
-                "channel_id": "UCsooa4yRKGN_zEE8iknghZA",
-                "title": "T-Series",
-                "description": "Music and Entertainment",
-                "custom_url": "@TSeries",
-                "published_at": "2006-03-13T00:00:00Z",
-                "country": "IN",
-                "default_language": "hi",
-                "subscriber_count": 245000000,
-                "view_count": 240000000000,
-                "video_count": 20000,
-                "keywords": "music,bollywood,hindi,entertainment",
-                "topic_categories": "Music|Entertainment",
-                "topic_ids": "music,entertainment",
-                "privacy_status": "public",
-                "is_linked": True,
-                "made_for_kids": False,
-                "subscriber_tier": "100M+",
-                "extraction_timestamp": datetime.now().isoformat(),
-                "source": "demo_data"
-            },
-            {
-                "channel_id": "UCddiUEpeqJcYeBxX1IVBKvQ",
-                "title": "Kurzgesagt – In a Nutshell",
-                "description": "Science and philosophy videos",
-                "custom_url": "@kurzgesagt",
-                "published_at": "2013-07-09T00:00:00Z",
-                "country": "DE",
-                "default_language": "en",
-                "subscriber_count": 21000000,
-                "view_count": 2500000000,
-                "video_count": 180,
-                "keywords": "science,education,philosophy,animation",
-                "topic_categories": "Education|Science",
-                "topic_ids": "education,science",
-                "privacy_status": "public",
-                "is_linked": True,
-                "made_for_kids": False,
-                "subscriber_tier": "10M+",
-                "extraction_timestamp": datetime.now().isoformat(),
-                "source": "demo_data"
-            }
-        ]
-        
-        # Insertion dans la collection youtube_channels (format simplifié)
-        db.youtube_channels.insert_many(demo_channels)
-        
-        # Insertion dans raw_data (format MongoDB pipeline)
-        raw_documents = []
-        timestamp = datetime.now()
-        
-        for channel in demo_channels:
-            doc = {
-                "timestamp": timestamp,
-                "data_type": "channels",
-                "source": "youtube_api_demo",
-                "processed": False,
-                "raw_data": channel,
-                "metadata": {
-                    "extraction_type": "demo_data",
-                    "total_channels": len(demo_channels)
-                }
-            }
-            raw_documents.append(doc)
-        
-        db.raw_data.insert_many(raw_documents)
-        
-        # Mise à jour du statut de traitement
-        db.processing_status.insert_one({
-            "timestamp": timestamp,
-            "status": "extraction_complete",
-            "source": "demo_data",
-            "records_count": len(demo_channels),
-            "data_type": "youtube_channels"
-        })
-        
-        logger.info(f"✅ {len(demo_channels)} chaînes de démonstration insérées dans MongoDB")
-        logger.info("📋 Collections créées: youtube_channels, raw_data, processing_status")
-        
-        client.close()
-        
-    except Exception as e:
-        logger.error(f"❌ Erreur lors de l'insertion des données de démonstration: {str(e)}")
-        raise
+       
 
 if __name__ == "__main__":
     main()

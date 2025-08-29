@@ -506,7 +506,7 @@ class YouTubeInfluencersETL:
             search_by_name = self.spark.sql("""
                 SELECT influencer_name, main_niche, total_views, engagement_rate
                 FROM influenceurs_search 
-                WHERE LOWER(IGN) LIKE '%tech%' 
+                WHERE LOWER(influencer_name) LIKE '%tech%' 
                 ORDER BY total_views DESC 
                 LIMIT 5
             """)

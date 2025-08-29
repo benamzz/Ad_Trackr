@@ -1,14 +1,6 @@
-# 🏗️ Architecture Data Lakehouse - Sans Airflow
-# Pipeline: API YouTube → MongoDB → Spark → HDFS → BI
-# 
-# Services:
-# - MongoDB + Mongo Express
-# - Spark Cluster (Master + Worker)  
-# - HDFS (NameNode + DataNode)
-# - Jupyter Notebook pour analyse
 
 services:
-  # 🗄️ MongoDB - Stockage des données brutes
+  # MongoDB - Stockage des données brutes
   mongo:
     image: mongo:6.0
     container_name: datalake-mongo
@@ -24,7 +16,7 @@ services:
     networks:
       - datalake
 
-  # 📊 Mongo Express - Interface Web pour MongoDB
+  # Mongo Express - Interface Web pour MongoDB
   mongo-express:
     image: mongo-express:latest
     container_name: datalake-mongo-express
@@ -43,7 +35,7 @@ services:
     networks:
       - datalake
 
-  # 🗄️ HDFS NameNode - Gestionnaire de métadonnées HDFS
+  # HDFS NameNode - Gestionnaire de métadonnées HDFS
   namenode:
     image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
     container_name: datalake-namenode
@@ -63,7 +55,7 @@ services:
     networks:
       - datalake
 
-  # 🗄️ HDFS DataNode - Stockage des données
+  # HDFS DataNode - Stockage des données
   datanode:
     image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     container_name: datalake-datanode
@@ -80,7 +72,7 @@ services:
     networks:
       - datalake
 
-  # ⚡ Spark Master - Coordinateur du cluster Spark
+  # Spark Master - Coordinateur du cluster Spark
   spark-master:
     image: bde2020/spark-master:3.3.0-hadoop3.3
     container_name: datalake-spark-master
@@ -92,11 +84,19 @@ services:
       - CORE_CONF_fs_defaultFS=hdfs://namenode:9000
     volumes:
       - ./spark-apps:/spark-apps
-      - ./data:/data
+    command: >
+      bash -c "
+        pip3 install pymongo requests &&
+        /bin/bash /master.sh
+      "
+    depends_on:
+      - namenode
+    env_file:
+      - .env
     networks:
       - datalake
 
-  # ⚡ Spark Worker - Nœud de traitement
+  # Spark Worker - Nœud de traitement
   spark-worker:
     image: bde2020/spark-worker:3.3.0-hadoop3.3
     container_name: datalake-spark-worker
@@ -109,43 +109,10 @@ services:
       - "8087:8087"  # Interface Web Spark Worker
     volumes:
       - ./spark-apps:/spark-apps
-      - ./data:/data
     depends_on:
       - spark-master
     networks:
       - datalake
-
-  # 📓 Jupyter Notebook - Interface d'analyse interactive
-  jupyter:
-    image: jupyter/pyspark-notebook:spark-3.3.0
-    container_name: datalake-jupyter
-    restart: always
-    environment:
-      - JUPYTER_ENABLE_LAB=yes
-      - JUPYTER_TOKEN=datalake_token_2025
-      - MONGO_URI=${MONGO_URI}
-      - HDFS_NAMENODE_URL=${HDFS_NAMENODE_URL}
-      - SPARK_MASTER_URL=${SPARK_MASTER_URL}
-    ports:
-      - "8888:8888"
-      - "4040:4040"
-    volumes:
-      - ./notebooks:/home/jovyan/work
-      - .:/workspace
-    user: root
-    command: >
-      bash -c "
-        pip install pymongo==4.5.0 &&
-        start-notebook.sh --NotebookApp.token='datalake_token_2025' --NotebookApp.password='' --NotebookApp.allow_root=True
-      "
-    depends_on:
-      - spark-master
-      - mongo
-      - namenode
-    networks:
-      - datalake
-    env_file:
-      - .env
 
 volumes:
   mongo_data:
