@@ -1,0 +1,14 @@
+# Requirements minimaux pour Airflow (Python 3.7)
+# Packages essentiels pour l'orchestration seulement
+
+# MongoDB - Pour connexion depuis Airflow
+pymongo==4.3.3
+
+# YouTube API - Pour extraction des données
+google-api-python-client==2.86.0
+google-auth-httplib2==0.1.0
+google-auth-oauthlib==0.8.0
+
+# Utilitaires de base
+requests==2.28.2
+python-dateutil==2.8.2
