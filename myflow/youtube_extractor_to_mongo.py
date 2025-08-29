@@ -23,7 +23,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 class YouTubeToMongoExtractor:
-    def __init__(self, api_key: str, mongo_uri: str = "mongodb://mongo:27017/"):
+    def __init__(self, api_key: str, mongo_uri: str = None):
         """
         Extracteur YouTube vers MongoDB
         
@@ -32,12 +32,22 @@ class YouTubeToMongoExtractor:
             mongo_uri: URI de connexion MongoDB
         """
         self.api_key = api_key
-        self.mongo_uri = mongo_uri
+        
+        # Configuration MongoDB adaptée pour Docker
+        if mongo_uri is None:
+            mongo_host = os.getenv("MONGO_HOST", "mongo")
+            mongo_port = os.getenv("MONGO_PORT", "27017")
+            mongo_user = os.getenv("MONGO_USER", "admin")
+            mongo_password = os.getenv("MONGO_PASSWORD", "password123")
+            self.mongo_uri = f'mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/'
+        else:
+            self.mongo_uri = mongo_uri
+            
         self.base_url = "https://www.googleapis.com/youtube/v3"
         
         # Connexion MongoDB
         try:
-            self.mongo_client = MongoClient(mongo_uri)
+            self.mongo_client = MongoClient(self.mongo_uri, authSource='admin')
             self.db = self.mongo_client.datalake
             self.raw_data_collection = self.db.raw_data
             self.api_logs_collection = self.db.api_logs

@@ -115,26 +115,6 @@ services:
     networks:
       - datalake
 
-  # 🧪 MyFlow - Container for testing workflows
-  myflow:
-    container_name: datalake-myflow
-    build:
-      context: ./myflow
-      dockerfile: Dockerfile
-    volumes:
-      - ./myflow:/app
-    environment:
-      - MONGO_URI=mongodb://mongo:27017/
-      - HDFS_NAMENODE_URL=hdfs://namenode:9000
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
-    depends_on:
-      - mongo
-      - namenode
-      - spark-master
-    networks:
-      - datalake
-
   # 📓 Jupyter Notebook - Interface d'analyse interactive
   # jupyter:
   #   image: jupyter/pyspark-notebook:spark-3.3.0

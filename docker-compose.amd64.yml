@@ -45,7 +45,7 @@ services:
 
   # 🗄️ HDFS NameNode - Gestionnaire de métadonnées HDFS
   namenode:
-    image: wxwmatt/hadoop-namenode:2.1.1-hadoop3.3.1-java8
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
     container_name: datalake-namenode
     ports:
       - "9870:9870"  # Interface Web NameNode
@@ -65,7 +65,7 @@ services:
 
   # 🗄️ HDFS DataNode - Stockage des données
   datanode:
-    image: wxwmatt/hadoop-datanode:2.1.1-hadoop3.3.1-java8
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
     container_name: datalake-datanode
     ports:
       - "9864:9864"  # Interface Web DataNode
@@ -82,7 +82,7 @@ services:
 
   # ⚡ Spark Master - Coordinateur du cluster Spark
   spark-master:
-    image: bitnami/spark:4.0.0
+    image: bde2020/spark-master:3.3.0-hadoop3.3
     container_name: datalake-spark-master
     ports:
       - "8086:8080"  # Interface Web Spark Master  
@@ -98,7 +98,7 @@ services:
 
   # ⚡ Spark Worker - Nœud de traitement
   spark-worker:
-    image: bitnami/spark:4.0.0
+    image: bde2020/spark-worker:3.3.0-hadoop3.3
     container_name: datalake-spark-worker
     environment:
       - SPARK_MASTER=spark://spark-master:7077
@@ -115,57 +115,37 @@ services:
     networks:
       - datalake
 
-  # 🧪 MyFlow - Container for testing workflows
-  myflow:
-    container_name: datalake-myflow
-    build:
-      context: ./myflow
-      dockerfile: Dockerfile
-    volumes:
-      - ./myflow:/app
+  # 📓 Jupyter Notebook - Interface d'analyse interactive
+  jupyter:
+    image: jupyter/pyspark-notebook:spark-3.3.0
+    container_name: datalake-jupyter
+    restart: always
     environment:
-      - MONGO_URI=mongodb://mongo:27017/
-      - HDFS_NAMENODE_URL=hdfs://namenode:9000
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - JUPYTER_ENABLE_LAB=yes
+      - JUPYTER_TOKEN=datalake_token_2025
+      - MONGO_URI=${MONGO_URI}
+      - HDFS_NAMENODE_URL=${HDFS_NAMENODE_URL}
+      - SPARK_MASTER_URL=${SPARK_MASTER_URL}
+    ports:
+      - "8888:8888"
+      - "4040:4040"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - .:/workspace
+    user: root
+    command: >
+      bash -c "
+        pip install pymongo==4.5.0 &&
+        start-notebook.sh --NotebookApp.token='datalake_token_2025' --NotebookApp.password='' --NotebookApp.allow_root=True
+      "
     depends_on:
+      - spark-master
       - mongo
       - namenode
-      - spark-master
     networks:
       - datalake
-
-  # 📓 Jupyter Notebook - Interface d'analyse interactive
-  # jupyter:
-  #   image: jupyter/pyspark-notebook:spark-3.3.0
-  #   container_name: datalake-jupyter
-  #   restart: always
-  #   environment:
-  #     - JUPYTER_ENABLE_LAB=yes
-  #     - JUPYTER_TOKEN=datalake_token_2025
-  #     - MONGO_URI=${MONGO_URI}
-  #     - HDFS_NAMENODE_URL=${HDFS_NAMENODE_URL}
-  #     - SPARK_MASTER_URL=${SPARK_MASTER_URL}
-  #   ports:
-  #     - "8888:8888"
-  #     - "4040:4040"
-  #   volumes:
-  #     - ./notebooks:/home/jovyan/work
-  #     - .:/workspace
-  #   user: root
-  #   command: >
-  #     bash -c "
-  #       pip install pymongo==4.5.0 &&
-  #       start-notebook.sh --NotebookApp.token='datalake_token_2025' --NotebookApp.password='' --NotebookApp.allow_root=True
-  #     "
-  #   depends_on:
-  #     - spark-master
-  #     - mongo
-  #     - namenode
-  #   networks:
-  #     - datalake
-  #   env_file:
-  #     - .env
+    env_file:
+      - .env
 
 volumes:
   mongo_data:

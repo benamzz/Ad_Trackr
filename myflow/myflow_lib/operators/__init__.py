@@ -8,4 +8,22 @@ from .bash_operator import BashOperator
 from .http_operator import HttpOperator
 from .operator_factory import OperatorFactory
 
-__all__ = ["BaseOperator", "PythonOperator", "BashOperator", "HttpOperator", "OperatorFactory"]
+# Opérateurs spécialisés
+from .youtube_operator import (
+    YouTubeExtractorOperator,
+    SparkETLOperator, 
+    MongoDBHealthCheckOperator,
+    HDFSHealthCheckOperator
+)
+
+__all__ = [
+    "BaseOperator", 
+    "PythonOperator", 
+    "BashOperator", 
+    "HttpOperator", 
+    "OperatorFactory",
+    "YouTubeExtractorOperator",
+    "SparkETLOperator",
+    "MongoDBHealthCheckOperator", 
+    "HDFSHealthCheckOperator"
+]

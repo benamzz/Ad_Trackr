@@ -45,15 +45,22 @@ class YouTubeInfluencersETL:
         try:
             logger.info("Configuration de l'environnement Spark...")
             
-            self.spark = SparkSession.builder \
+            # Configuration Spark adaptée pour Docker
+            spark_builder = SparkSession.builder \
                 .appName("YouTubeInfluencersFromVideos") \
                 .config("spark.sql.adaptive.enabled", "true") \
                 .config("spark.sql.adaptive.coalescePartitions.enabled", "true") \
                 .config("spark.sql.execution.arrow.pyspark.enabled", "true") \
-                .config("spark.hadoop.fs.defaultFS", "hdfs://datalake-namenode:9000") \
-                .config("spark.mongodb.input.uri", "mongodb://datalake-mongo:27017/datalake.raw_data") \
-                .config("spark.mongodb.output.uri", "mongodb://datalake-mongo:27017/datalake.raw_data") \
-                .getOrCreate()
+                .config("spark.hadoop.fs.defaultFS", "hdfs://namenode:9000") \
+                .config("spark.mongodb.input.uri", "mongodb://mongo:27017/datalake.raw_data") \
+                .config("spark.mongodb.output.uri", "mongodb://mongo:27017/datalake.raw_data")
+            
+            # Ajouter le master Spark si disponible
+            spark_master = os.getenv("SPARK_MASTER_URL")
+            if spark_master:
+                spark_builder = spark_builder.master(spark_master)
+            
+            self.spark = spark_builder.getOrCreate()
 
             self.spark.sparkContext.setLogLevel("WARN")
             
@@ -71,7 +78,14 @@ class YouTubeInfluencersETL:
         try:
             logger.info("Test de connexion MongoDB...")
             
-            self.client = MongoClient('mongodb://admin:password123@datalake-mongo:27017/', authSource='admin')
+            # Connexion MongoDB adaptée pour Docker
+            mongo_host = os.getenv("MONGO_HOST", "mongo")
+            mongo_port = os.getenv("MONGO_PORT", "27017")
+            mongo_user = os.getenv("MONGO_USER", "admin")
+            mongo_password = os.getenv("MONGO_PASSWORD", "password123")
+            
+            mongo_uri = f'mongodb://{mongo_user}:{mongo_password}@{mongo_host}:{mongo_port}/'
+            self.client = MongoClient(mongo_uri, authSource='admin')
             db = self.client.datalake
             collection = db.raw_data
             
@@ -506,7 +520,7 @@ class YouTubeInfluencersETL:
             search_by_name = self.spark.sql("""
                 SELECT influencer_name, main_niche, total_views, engagement_rate
                 FROM influenceurs_search 
-                WHERE LOWER(IGN) LIKE '%tech%' 
+                WHERE LOWER(influencer_name) LIKE '%tech%' 
                 ORDER BY total_views DESC 
                 LIMIT 5
             """)
@@ -583,7 +597,7 @@ class YouTubeInfluencersETL:
         
         # Recherche par nom:
         SELECT * FROM influenceurs_search 
-        WHERE LOWER(IGN) LIKE '%keyword%'
+        WHERE LOWER(influencer_name) LIKE '%keyword%'
         
         # Recherche par niche:
         SELECT * FROM influenceurs_search 
