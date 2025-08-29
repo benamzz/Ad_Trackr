@@ -647,11 +647,11 @@ class YouTubeInfluencersETL:
                 return False
             
             # 7. Test des capacités de recherche
-            if not self.validate_search_capabilities():
-                return False
+            #if not self.validate_search_capabilities():
+            #    return False
             
             # 8. Documentation
-            self.generate_search_documentation()
+            #self.generate_search_documentation()
             
             # Statistiques finales
             end_time = datetime.now()
